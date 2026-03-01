@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Pronoun Evaluation System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin: 25px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #34495e;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        input[type="text"], input[type="password"], input[type="number"], select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: white;
+        }
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .results {
+            margin-top: 30px;
+            display: none;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #3498db;
+            transition: width 0.3s ease;
+        }
+        .task-item {
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+        }
+        .result-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .accuracy-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #27ae60;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #ddd;
+            margin: 20px 0;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            border-bottom: 2px solid transparent;
+        }
+        .tab.active {
+            border-bottom-color: #3498db;
+            color: #3498db;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .error {
+            color: #e74c3c;
+            background: #fadbd8;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #27ae60;
+            background: #d5f4e6;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .info {
+            color: #3498db;
+            background: #d6eaf8;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .comparison-table th, .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .comparison-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+        .export-buttons {
+            margin: 15px 0;
+        }
+        .export-buttons button {
+            margin-right: 10px;
+            background: #17a2b8;
+        }
+        .export-buttons button:hover {
+            background: #138496;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Complete Pronoun Evaluation System</h1>
+        <p style="text-align: center; color: #7f8c8d;">
+            Based on MISGENDERED methodology with zero-shot and in-context learning evaluation
+        </p>
+
+        <!-- Configuration Section -->
+        <div class="section">
+            <h3>📊 Evaluation Configuration</h3>
+            
+            <div class="form-group">
+                <label>Select Models (Choose multiple):</label>
+                <div class="checkbox-group">
+                    {% for model_key, model_config in models.items() %}
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="{{ model_key }}" value="{{ model_key }}">
+                        <label for="{{ model_key }}">{{ model_config.description }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Select Strategies:</label>
+                <div class="checkbox-group">
+                    {% for strategy in strategies %}
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="{{ strategy.value }}" value="{{ strategy.value }}" 
+                               {% if strategy.value == "zero_shot" %}checked{% endif %}>
+                        <label for="{{ strategy.value }}">{{ strategy.name }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="test_limit">Number of Test Cases:</label>
+                <input type="number" id="test_limit" value="11000" min="100" max="15000" step="100">
+                <small style="color: #7f8c8d;">Default: 11000 (1000 per pronoun category), Max: 15000</small>
+            </div>
+        </div>
+
+        <!-- API Keys Section -->
+        <div class="section">
+            <h3>🔑 API Configuration</h3>
+            
+            <div class="form-group">
+                <label for="openai_api_key">OpenAI API Key (for GPT-4o):</label>
+                <input type="password" id="openai_api_key" placeholder="sk-...">
+            </div>
+            
+            <div class="form-group">
+                <label for="anthropic_api_key">Anthropic API Key (for Claude-4):</label>
+                <input type="password" id="anthropic_api_key" placeholder="sk-ant-...">
+            </div>
+            
+            <div class="form-group">
+                <label for="dashscope_api_key">DashScope API Key (for Qwen-Turbo, Qwen2.5-72B):</label>
+                <input type="password" id="dashscope_api_key" placeholder="sk-...">
+            </div>
+            
+            <div class="form-group">
+                <label for="deepseek_api_key">DeepSeek API Key (for DeepSeek-V3):</label>
+                <input type="password" id="deepseek_api_key" placeholder="sk-...">
+            </div>
+        </div>
+
+        <!-- Action Section -->
+        <div class="section">
+            <button id="startBtn" onclick="startEvaluation()">🚀 Start Evaluation</button>
+            <button onclick="loadHistory()">📜 View History</button>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results" class="results">
+            <div class="section">
+                <h3>📈 Evaluation Progress</h3>
+                <div id="progress-info"></div>
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                </div>
+                <div id="current-status"></div>
+            </div>
+
+            <!-- Results Tabs -->
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('summary')">Summary</button>
+                <button class="tab" onclick="showTab('detailed')">Detailed Analysis</button>
+                <button class="tab" onclick="showTab('comparison')">Model Comparison</button>
+                <button class="tab" onclick="showTab('bias')">Bias Analysis</button>
+                <button class="tab" onclick="showTab('export')">Export Results</button>
+            </div>
+
+            <div id="summary-tab" class="tab-content active">
+                <div class="section">
+                    <h3>📊 Summary Results</h3>
+                    <div id="summary-results"></div>
+                </div>
+            </div>
+
+            <div id="detailed-tab" class="tab-content">
+                <div class="section">
+                    <h3>🔍 Detailed Analysis</h3>
+                    <div id="detailed-results"></div>
+                </div>
+            </div>
+
+            <div id="comparison-tab" class="tab-content">
+                <div class="section">
+                    <h3>⚖️ Model Comparison</h3>
+                    <div id="comparison-results"></div>
+                </div>
+            </div>
+
+            <div id="bias-tab" class="tab-content">
+                <div class="section">
+                    <h3>🎯 Bias Analysis</h3>
+                    <div id="bias-results"></div>
+                </div>
+            </div>
+
+            <div id="export-tab" class="tab-content">
+                <div class="section">
+                    <h3>💾 Export Results</h3>
+                    <div class="export-buttons">
+                        <button onclick="exportResults('json')">📄 Export as JSON</button>
+                        <button onclick="exportResults('csv')">📊 Export as CSV</button>
+                    </div>
+                    <div id="export-info"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div id="history-section" class="section" style="display: none;">
+            <h3>📜 Task History</h3>
+            <div id="history-list"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentTaskId = null;
+        let currentResults = null;
+
+        async function startEvaluation() {
+            // Get selected models
+            const selectedModels = [];
+            document.querySelectorAll('input[type="checkbox"][value]').forEach(cb => {
+                if (cb.checked && cb.value.includes('-')) {
+                    selectedModels.push(cb.value);
+                }
+            });
+
+            if (selectedModels.length === 0) {
+                showError('Please select at least one model');
+                return;
+            }
+
+            // Get selected strategies
+            const selectedStrategies = [];
+            document.querySelectorAll('input[type="checkbox"][id$="_shot"], input[type="checkbox"][id$="_learning"]').forEach(cb => {
+                if (cb.checked) {
+                    selectedStrategies.push(cb.value);
+                }
+            });
+
+            if (selectedStrategies.length === 0) {
+                showError('Please select at least one strategy');
+                return;
+            }
+
+            // Get API keys
+            const apiKeys = {};
+            const keyMappings = {
+                'openai_api_key': 'openai_api_key',
+                'anthropic_api_key': 'anthropic_api_key', 
+                'dashscope_api_key': 'dashscope_api_key',
+                'deepseek_api_key': 'deepseek_api_key'
+            };
+
+            for (const [inputId, keyName] of Object.entries(keyMappings)) {
+                const value = document.getElementById(inputId).value.trim();
+                if (value) {
+                    apiKeys[keyName] = value;
+                }
+            }
+
+            const testLimit = parseInt(document.getElementById('test_limit').value);
+
+            // Start evaluation
+            try {
+                document.getElementById('startBtn').disabled = true;
+                
+                const response = await fetch('/api/start_evaluation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        selected_models: selectedModels,
+                        api_keys: apiKeys,
+                        test_limit: testLimit,
+                        strategies: selectedStrategies
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    currentTaskId = result.task_id;
+                    document.getElementById('results').style.display = 'block';
+                    showSuccess(`Evaluation started! Task ID: ${currentTaskId}`);
+                    monitorProgress();
+                } else {
+                    showError('Error: ' + result.detail);
+                    document.getElementById('startBtn').disabled = false;
+                }
+            } catch (error) {
+                showError('Error starting evaluation: ' + error);
+                document.getElementById('startBtn').disabled = false;
+            }
+        }
+
+        async function monitorProgress() {
+            if (!currentTaskId) return;
+
+            try {
+                const response = await fetch(`/api/task_status/${currentTaskId}`);
+                const status = await response.json();
+
+                // Update progress
+                document.getElementById('progress-fill').style.width = status.progress + '%';
+                document.getElementById('progress-info').innerHTML = `
+                    <strong>Status:</strong> ${status.status} | 
+                    <strong>Overall Progress:</strong> ${status.progress}%
+                `;
+
+                let statusHtml = '';
+                if (status.current_model) {
+                    statusHtml += `<strong>Current Model:</strong> ${status.current_model}<br>`;
+                }
+                if (status.current_strategy) {
+                    statusHtml += `<strong>Current Strategy:</strong> ${status.current_strategy}<br>`;
+                }
+                if (status.current_test_case) {
+                    statusHtml += `<strong>Test Cases:</strong> ${status.current_test_case}<br>`;
+                }
+                if (status.total_evaluations) {
+                    const currentEval = Object.keys(status.results || {}).length + 1;
+                    statusHtml += `<strong>Evaluation:</strong> ${currentEval}/${status.total_evaluations}<br>`;
+                }
+                document.getElementById('current-status').innerHTML = statusHtml;
+
+                if (status.status === 'completed') {
+                    await loadResults();
+                    showSuccess('Evaluation completed successfully!');
+                    document.getElementById('startBtn').disabled = false;
+                } else if (status.status === 'failed') {
+                    showError(`Evaluation failed: ${status.error}`);
+                    document.getElementById('startBtn').disabled = false;
+                } else {
+                    setTimeout(monitorProgress, 2000);
+                }
+            } catch (error) {
+                console.error('Error monitoring progress:', error);
+                setTimeout(monitorProgress, 2000);
+            }
+        }
+
+        async function loadResults() {
+            if (!currentTaskId) return;
+
+            try {
+                const response = await fetch(`/api/results/${currentTaskId}`);
+                currentResults = await response.json();
+                
+                displaySummaryResults(currentResults);
+                
+                // Load detailed analysis
+                const analysisResponse = await fetch(`/api/detailed_analysis/${currentTaskId}`);
+                const analysis = await analysisResponse.json();
+                displayDetailedAnalysis(analysis);
+                
+            } catch (error) {
+                showError('Error loading results: ' + error);
+            }
+        }
+
+        function displaySummaryResults(results) {
+            let html = '<div class="result-grid">';
+            
+            for (const result of results) {
+                if (result.error) {
+                    html += `
+                        <div class="result-card">
+                            <h4>${result.model_name} (${result.strategy})</h4>
+                            <div class="error">Error: ${result.error}</div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="result-card">
+                            <h4>${result.model_description} (${result.strategy})</h4>
+                            <div class="accuracy-display">${(result.accuracy * 100).toFixed(1)}%</div>
+                            <p><strong>Correct:</strong> ${result.correct_predictions}/${result.total_cases}</p>
+                            <p><strong>Time:</strong> ${result.execution_time.toFixed(1)}s</p>
+                            
+                            <h5>Performance by Pronoun:</h5>
+                            <table class="comparison-table">
+                                <tr><th>Pronoun</th><th>Accuracy</th><th>Correct/Total</th></tr>
+                                ${Object.entries(result.results_by_pronoun || {}).map(([pronoun, stats]) => `
+                                    <tr>
+                                        <td>${pronoun}</td>
+                                        <td>${(stats.accuracy * 100).toFixed(1)}%</td>
+                                        <td>${stats.correct}/${stats.total}</td>
+                                    </tr>
+                                `).join('')}
+                            </table>
+                            
+                            <h5>Performance by Grammatical Form:</h5>
+                            <table class="comparison-table">
+                                <tr><th>Form</th><th>Accuracy</th><th>Correct/Total</th></tr>
+                                ${Object.entries(result.results_by_form || {}).map(([form, stats]) => `
+                                    <tr>
+                                        <td>${form}</td>
+                                        <td>${(stats.accuracy * 100).toFixed(1)}%</td>
+                                        <td>${stats.correct}/${stats.total}</td>
+                                    </tr>
+                                `).join('')}
+                            </table>
+                        </div>
+                    `;
+                }
+            }
+            html += '</div>';
+            
+            document.getElementById('summary-results').innerHTML = html;
+        }
+
+        function displayDetailedAnalysis(analysis) {
+            // Summary analysis
+            const summary = analysis.summary || {};
+            document.getElementById('detailed-results').innerHTML = `
+                <div class="result-card">
+                    <h4>📊 Overall Statistics</h4>
+                    <p><strong>Total Evaluations:</strong> ${summary.total_evaluations || 0}</p>
+                    <p><strong>Successful:</strong> ${summary.successful_evaluations || 0}</p>
+                    <p><strong>Failed:</strong> ${summary.failed_evaluations || 0}</p>
+                    <p><strong>Average Accuracy:</strong> ${((summary.average_accuracy || 0) * 100).toFixed(1)}%</p>
+                    <p><strong>Best Model:</strong> ${summary.best_performing_model || 'N/A'}</p>
+                </div>
+            `;
+
+            // Comparison analysis
+            const comparative = analysis.comparative_analysis || {};
+            let comparisonHtml = '<div class="result-card"><h4>🏆 Model Ranking</h4>';
+            if (comparative.model_ranking) {
+                comparisonHtml += '<table class="comparison-table"><tr><th>Rank</th><th>Model</th><th>Average Accuracy</th></tr>';
+                comparative.model_ranking.forEach((item, index) => {
+                    comparisonHtml += `<tr><td>${index + 1}</td><td>${item[0]}</td><td>${(item[1] * 100).toFixed(1)}%</td></tr>`;
+                });
+                comparisonHtml += '</table>';
+            }
+            comparisonHtml += '</div>';
+            document.getElementById('comparison-results').innerHTML = comparisonHtml;
+
+            // Bias analysis
+            const bias = analysis.bias_analysis || {};
+            let biasHtml = '<div class="result-card"><h4>⚖️ Pronoun Performance Analysis</h4>';
+            if (bias.pronoun_performance) {
+                biasHtml += '<table class="comparison-table"><tr><th>Pronoun</th><th>Average Performance</th></tr>';
+                Object.entries(bias.pronoun_performance).forEach(([pronoun, accuracy]) => {
+                    biasHtml += `<tr><td>${pronoun}</td><td>${(accuracy * 100).toFixed(1)}%</td></tr>`;
+                });
+                biasHtml += '</table>';
+                
+                if (bias.bias_score) {
+                    biasHtml += `<p><strong>Bias Score:</strong> ${(bias.bias_score * 100).toFixed(1)}% (difference between best and worst performing pronouns)</p>`;
+                }
+            }
+            biasHtml += '</div>';
+            document.getElementById('bias-results').innerHTML = biasHtml;
+        }
+
+        async function exportResults(format) {
+            if (!currentTaskId) {
+                showError('No results to export');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/export_results/${currentTaskId}?format=${format}`);
+                const result = await response.json();
+                
+                const blob = new Blob([format === 'csv' ? result.data : JSON.stringify(result.data, null, 2)], {
+                    type: format === 'csv' ? 'text/csv' : 'application/json'
+                });
+                
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = result.filename;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                showSuccess(`Results exported as ${format.toUpperCase()}`);
+            } catch (error) {
+                showError('Error exporting results: ' + error);
+            }
+        }
+
+        async function loadHistory() {
+            try {
+                const response = await fetch('/api/history');
+                const history = await response.json();
+                
+                let html = '';
+                for (const task of history.tasks) {
+                    html += `
+                        <div class="task-item">
+                            <p><strong>Task ID:</strong> ${task.task_id}</p>
+                            <p><strong>Time:</strong> ${new Date(task.timestamp).toLocaleString()}</p>
+                            <p><strong>Status:</strong> ${task.status}</p>
+                            <p><strong>Models:</strong> ${(task.models || []).join(', ')}</p>
+                            <p><strong>Strategies:</strong> ${(task.strategies || []).join(', ')}</p>
+                            <button onclick="loadTaskResults('${task.task_id}')">View Results</button>
+                        </div>
+                    `;
+                }
+                
+                document.getElementById('history-list').innerHTML = html || '<p>No historical tasks found.</p>';
+                document.getElementById('history-section').style.display = 'block';
+            } catch (error) {
+                showError('Error loading history: ' + error);
+            }
+        }
+
+        async function loadTaskResults(taskId) {
+            currentTaskId = taskId;
+            document.getElementById('results').style.display = 'block';
+            await loadResults();
+            showSuccess(`Loaded results for task ${taskId}`);
+        }
+
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            document.body.insertBefore(errorDiv, document.body.firstChild);
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.textContent = message;
+            document.body.insertBefore(successDiv, document.body.firstChild);
+            setTimeout(() => successDiv.remove(), 3000);
+        }
+    </script>
+</body>
+</html>

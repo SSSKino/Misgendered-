@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>反向性别推理检测系统</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        .section {
+            margin: 25px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #34495e;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        input[type="text"], input[type="password"], input[type="number"], select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: white;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .checkbox-item:hover {
+            background: #f0f8ff;
+        }
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+        .model-info {
+            color: #666;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .progress-section {
+            display: none;
+            margin-top: 30px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-weight: 600;
+        }
+        .results-section {
+            display: none;
+            margin-top: 30px;
+        }
+        .results-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+        .tab-button {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            margin: 0;
+        }
+        .tab-button.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .results-table th,
+        .results-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .results-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        .results-table tr:hover {
+            background: #f8f9fa;
+        }
+        .metric-card {
+            display: inline-block;
+            background: white;
+            padding: 20px;
+            margin: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+            min-width: 150px;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #3498db;
+        }
+        .metric-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        .status-message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            display: none;
+        }
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>反向性别推理检测系统</h1>
+        <p class="subtitle">Reverse Gender Inference Detection System - 系统性地揭示大语言模型在性别认知方面的隐性偏见</p>
+
+        <!-- API Keys Section -->
+        <div class="section">
+            <h3>🔑 API密钥配置</h3>
+            <p style="color: #666; margin-bottom: 20px;">
+                请输入要使用的模型的API密钥。如果不输入密钥，将使用演示模型进行测试。
+            </p>
+            
+            <div class="two-column">
+                <div class="form-group">
+                    <label for="openai_api_key">OpenAI API Key (GPT-4o):</label>
+                    <input type="password" id="openai_api_key" placeholder="sk-...">
+                </div>
+                
+                <div class="form-group">
+                    <label for="anthropic_api_key">Anthropic API Key (Claude-4):</label>
+                    <input type="password" id="anthropic_api_key" placeholder="sk-ant-...">
+                </div>
+                
+                <div class="form-group">
+                    <label for="dashscope_api_key">DashScope API Key (Qwen模型):</label>
+                    <input type="password" id="dashscope_api_key" placeholder="sk-...">
+                </div>
+                
+                <div class="form-group">
+                    <label for="deepseek_api_key">DeepSeek API Key (DeepSeek-V3):</label>
+                    <input type="password" id="deepseek_api_key" placeholder="sk-...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Model Selection Section -->
+        <div class="section">
+            <h3>🤖 模型选择</h3>
+            <p style="color: #666; margin-bottom: 15px;">
+                选择要评估的模型。有API密钥的模型将调用真实API，其他将使用演示模型。
+            </p>
+            
+            <div class="checkbox-group" id="model-selection">
+                <!-- Models will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Evaluation Configuration -->
+        <div class="section">
+            <h3>⚙️ 评估配置</h3>
+            
+            <div class="two-column">
+                <div class="form-group">
+                    <label for="test-scale">测试规模:</label>
+                    <select id="test-scale">
+                        <option value="1000">1K (快速测试)</option>
+                        <option value="5000">5K (中等规模)</option>
+                        <option value="19800" selected>19.8K (完整规模)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="random-seed">随机种子:</label>
+                    <input type="number" id="random-seed" value="42" min="0" max="999999">
+                    <small style="color: #666;">确保结果可重现</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="batch-size">批处理大小:</label>
+                    <input type="number" id="batch-size" value="20" min="1" max="200">
+                    <small style="color: #666;">GPT模型推荐: 1-5，其他模型: 10-50</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="max-concurrent">最大并发数:</label>
+                    <input type="number" id="max-concurrent" value="3" min="1" max="20">
+                    <small style="color: #666;">GPT模型推荐: 1-3，其他模型: 5-10</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="timeout">超时时间 (秒):</label>
+                    <input type="number" id="timeout" value="60" min="5" max="180">
+                    <small style="color: #666;">包含重试等待时间</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Buttons -->
+        <div style="text-align: center; margin: 30px 0;">
+            <button id="start-evaluation">开始评估</button>
+            <button id="stop-evaluation" disabled>停止评估</button>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="status-message" class="status-message"></div>
+
+        <!-- Progress Section -->
+        <div id="progress-section" class="progress-section">
+            <h3>📊 评估进度</h3>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="progress-text">
+                <span id="progress-percentage">0%</span>
+                <span id="progress-message">准备中...</span>
+            </div>
+            <div id="progress-details" style="margin-top: 15px; color: #666;"></div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-section" class="results-section">
+            <h3>📈 评估结果</h3>
+            
+            <div class="results-tabs">
+                <button class="tab-button active" data-tab="summary">总体概览</button>
+                <button class="tab-button" data-tab="detailed">详细分析</button>
+                <button class="tab-button" data-tab="bias">偏见指标</button>
+                <button class="tab-button" data-tab="errors">错误分析</button>
+            </div>
+
+            <div id="summary-tab" class="tab-content active">
+                <div id="summary-metrics"></div>
+                <table class="results-table" id="summary-table">
+                    <thead>
+                        <tr>
+                            <th>模型</th>
+                            <th>准确率</th>
+                            <th>总用例</th>
+                            <th>正确数</th>
+                            <th>偏见等级</th>
+                            <th>执行时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="summary-tbody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="detailed-tab" class="tab-content">
+                <div id="detailed-analysis"></div>
+            </div>
+
+            <div id="bias-tab" class="tab-content">
+                <div id="bias-metrics"></div>
+            </div>
+
+            <div id="errors-tab" class="tab-content">
+                <div id="error-analysis"></div>
+            </div>
+        </div>
+
+        <!-- Export Section -->
+        <div style="text-align: center; margin: 30px 0; display: none;" id="export-section">
+            <button id="export-results">导出结果 (JSON)</button>
+            <button id="save-config">保存配置</button>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
